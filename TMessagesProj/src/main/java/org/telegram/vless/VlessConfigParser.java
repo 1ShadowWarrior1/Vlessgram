@@ -31,10 +31,12 @@ public final class VlessConfigParser {
     public static ParsedConfig parseToLibConfigJson(String uri, int localPort) {
         try {
             if (uri == null) {
+                android.util.Log.d("VlessConfigParser", "VLESS: parseToLibConfigJson - URI is null");
                 return null;
             }
             String s = uri.trim();
             if (s.isEmpty()) {
+                android.util.Log.d("VlessConfigParser", "VLESS: parseToLibConfigJson - URI is empty");
                 return null;
             }
             String low = s.toLowerCase(Locale.ROOT);
@@ -47,6 +49,8 @@ public final class VlessConfigParser {
             } else if (low.startsWith("ss://")) {
                 scheme = "ss";
             } else {
+                android.util.Log.d("VlessConfigParser", "VLESS: parseToLibConfigJson - Unknown scheme: " + 
+                    (s.length() > 20 ? s.substring(0, 20) + "..." : s));
                 return null;
             }
 
@@ -100,6 +104,7 @@ public final class VlessConfigParser {
                 String part = sNoFrag.substring("vless://".length());
                 int at = part.indexOf('@');
                 if (at < 0) {
+                    android.util.Log.d("VlessConfigParser", "VLESS: vless - Missing '@' separator");
                     return null;
                 }
                 String uuidStr = part.substring(0, at);
@@ -118,6 +123,7 @@ public final class VlessConfigParser {
 
                 HostPort hp = parseHostPort(hostPortPart);
                 if (hp == null) {
+                    android.util.Log.d("VlessConfigParser", "VLESS: vless - Invalid host:port: " + hostPortPart);
                     return null;
                 }
 
@@ -175,6 +181,7 @@ public final class VlessConfigParser {
                 String part = sNoFrag.substring("trojan://".length());
                 int at = part.indexOf('@');
                 if (at < 0) {
+                    android.util.Log.d("VlessConfigParser", "VLESS: trojan - Missing '@' separator");
                     return null;
                 }
                 String password = part.substring(0, at);
@@ -193,6 +200,7 @@ public final class VlessConfigParser {
 
                 HostPort hp = parseHostPort(hostPortPart);
                 if (hp == null) {
+                    android.util.Log.d("VlessConfigParser", "VLESS: trojan - Invalid host:port: " + hostPortPart);
                     return null;
                 }
 
