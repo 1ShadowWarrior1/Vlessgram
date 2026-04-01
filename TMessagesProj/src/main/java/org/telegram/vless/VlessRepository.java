@@ -61,7 +61,6 @@ public final class VlessRepository {
     private static final String PREFS_NAME = "vless_data";
     private static final String KEY_DATA_JSON = "data_json";
 
-    private static final String DEFAULT_USER_AGENT = "Mozilla/5.0";
     private static final String[] USER_AGENTS = new String[]{
             "clash-verge/v1.3.8",
             "v2rayNG/1.8.5",
@@ -70,6 +69,7 @@ public final class VlessRepository {
             "v2rayN/6.23",
             "clash-meta"
     };
+    private static final String DEFAULT_USER_AGENT = "Mozilla/5.0";
 
     private static VlessRepository instance;
 
@@ -1127,16 +1127,22 @@ public final class VlessRepository {
         try {
             content = fetchText(trimmed);
         } catch (Exception e) {
+            android.util.Log.e("VlessRepository", "VLESS: Failed to fetch subscription: " + e.getMessage());
             return false;
         }
 
         List<VlessSubscriptionParser.NodeSeed> seeds = VlessSubscriptionParser.extractNodesFromSubscriptionText(content);
         if (seeds.isEmpty()) {
+            android.util.Log.w("VlessRepository", "VLESS: No nodes found in subscription");
             return false;
         }
 
         String id = trimmed;
         String name = hostFromUrl(trimmed);
+
+        int validCount = 0;
+        int invalidCount = 0;
+        int duplicateCount = 0;
 
         synchronized (lock) {
             VlessSubscription sub = null;
@@ -1159,25 +1165,39 @@ public final class VlessRepository {
                 if (seed == null || seed.uri == null) continue;
                 String normalizedUri = normalizeNodeUri(seed.uri);
                 if (normalizedUri.isEmpty()) {
+                    invalidCount++;
                     continue;
                 }
                 // Validate URI before storing it to avoid "click does nothing" later.
                 VlessConfigParser.ParsedConfig parsed = VlessConfigParser.parseToLibConfigJson(normalizedUri, localPort);
                 if (parsed == null) {
+                    android.util.Log.w("VlessRepository", "VLESS: Invalid node URI: " + 
+                        (normalizedUri.length() > 50 ? normalizedUri.substring(0, 50) + "..." : normalizedUri));
+                    invalidCount++;
                     continue;
                 }
                 // de-dup by uri across all nodes: keep first occurrence.
                 VlessNode existing = findNodeByUri(normalizedUri);
                 if (existing != null) {
+                    duplicateCount++;
                     continue;
                 }
                 String nodeName = seed.name != null && !seed.name.trim().isEmpty() ? seed.name : parsed.name;
                 sub.nodes.add(new VlessNode(normalizedUri, nodeName, false, id, localPort));
+                validCount++;
             }
 
             saveToPrefsLocked();
         }
-        return true;
+
+        android.util.Log.i("VlessRepository", "VLESS: Subscription updated: " + validCount + " valid, " + 
+            invalidCount + " invalid, " + duplicateCount + " duplicates");
+
+        if (validCount == 0) {
+            android.util.Log.e("VlessRepository", "VLESS: Subscription added but NO VALID nodes found!");
+        }
+
+        return validCount > 0;
     }
 
     private static String normalizeNodeUri(String uri) {
@@ -1199,13 +1219,12 @@ public final class VlessRepository {
 
     private String fetchText(String urlStr) throws Exception {
         String ua = USER_AGENTS[new Random().nextInt(USER_AGENTS.length)];
-        String finalUa = DEFAULT_USER_AGENT + " " + ua;
 
         HttpURLConnection conn = (HttpURLConnection) new URL(urlStr).openConnection();
         conn.setConnectTimeout(12000);
         conn.setReadTimeout(20000);
         conn.setInstanceFollowRedirects(true);
-        conn.setRequestProperty("User-Agent", finalUa);
+        conn.setRequestProperty("User-Agent", ua);
 
         int code = conn.getResponseCode();
         if (code < 200 || code >= 300) {
