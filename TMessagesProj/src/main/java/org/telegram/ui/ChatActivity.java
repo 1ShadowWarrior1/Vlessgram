@@ -13566,6 +13566,10 @@ public class ChatActivity extends BaseFragment implements
     @Override
     public void didSelectFiles(ArrayList<String> files, String caption, ArrayList<TLRPC.MessageEntity> captionEntities, ArrayList<MessageObject> fmessages, boolean notify, int scheduleDate, int scheduleRepeatPeriod, long effectId, boolean invertMedia, long payStars) {
         fillEditingMediaWithCaption(caption, null);
+        // Clear text message if exists
+        if (chatActivityEnterView != null) {
+            chatActivityEnterView.clearMessageText();
+        }
         if (checkSlowModeAlert()) {
             if (!fmessages.isEmpty() && !TextUtils.isEmpty(caption)) {
                 SendMessagesHelper.SendMessageParams params = SendMessagesHelper.SendMessageParams.of(caption, dialog_id, null, null, null, true, captionEntities, null, null, true, 0, 0, null, false);
@@ -13587,6 +13591,10 @@ public class ChatActivity extends BaseFragment implements
     @Override
     public void didSelectPhotos(ArrayList<SendMessagesHelper.SendingMediaInfo> photos, boolean notify, int scheduleDate, int scheduleRepeatPeriod, long payStars) {
         fillEditingMediaWithCaption(photos.get(0).caption, photos.get(0).entities);
+        // Clear text message if exists
+        if (chatActivityEnterView != null) {
+            chatActivityEnterView.clearMessageText();
+        }
         SendMessagesHelper.prepareSendingMedia(getAccountInstance(), photos, dialog_id, replyingMessageObject, getThreadMessage(), null, replyingQuote, true, false, editingMessageObject, notify, scheduleDate, scheduleRepeatPeriod, chatMode, photos.get(0).updateStickersOrder, null, quickReplyShortcut, getQuickReplyId(), 0, false, payStars, getSendMonoForumPeerId(), getSendMessageSuggestionParams());
         afterMessageSend();
         if (scheduleDate != 0) {
@@ -13604,6 +13612,10 @@ public class ChatActivity extends BaseFragment implements
         }
         if (!checkSlowModeAlert()) {
             return;
+        }
+        // Clear text message if exists
+        if (chatActivityEnterView != null) {
+            chatActivityEnterView.clearMessageText();
         }
         boolean hasNoGifs = false;
         for (int a = 0; a < photos.size(); a++) {
@@ -19514,6 +19526,10 @@ public class ChatActivity extends BaseFragment implements
     private void sendUriAsDocument(Uri uri, boolean notify, int schedule_date) {
         if (uri == null) {
             return;
+        }
+        // Clear text message if exists
+        if (chatActivityEnterView != null) {
+            chatActivityEnterView.clearMessageText();
         }
         String extractUriFrom = uri.toString();
         if (extractUriFrom.contains("com.google.android.apps.photos.contentprovider")) {
@@ -34271,6 +34287,11 @@ public class ChatActivity extends BaseFragment implements
         }
 
         animatorRoundMessageCameraVisibility.setValue(false, true);
+
+        // Clear text message if exists
+        if (chatActivityEnterView != null) {
+            chatActivityEnterView.clearMessageText();
+        }
 
         if (editingMessageObject != null && editingMessageObject.needResendWhenEdit() && !ChatObject.canManageMonoForum(currentAccount, editingMessageObject.getDialogId())) {
             final MessageSuggestionParams params = messageSuggestionParams != null ? messageSuggestionParams :

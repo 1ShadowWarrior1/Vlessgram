@@ -7369,7 +7369,9 @@ public class ChatActivityEnterView extends FrameLayout implements
                         runningAnimation2 = null;
                     }
 
-                    if (attachLayout != null) {
+                    // Only hide attachLayout if NOT text-only mode (keep it visible when user types text)
+                    boolean isTextOnly = message.length() > 0 && !forceShowSendButton && audioToSend == null && videoToSendMessageObject == null;
+                    if (attachLayout != null && !isTextOnly) {
                         runningAnimation2 = new AnimatorSet();
                         ArrayList<Animator> animators = new ArrayList<>();
                         animators.add(ObjectAnimator.ofFloat(attachLayout, ATTACH_LAYOUT_ALPHA, 0.0f));
@@ -7413,8 +7415,8 @@ public class ChatActivityEnterView extends FrameLayout implements
                             }
                         });
                         runningAnimation2.start();
-                        updateFieldRight(0);
-                        if (delegate != null && getVisibility() == VISIBLE) {
+                        updateFieldRight(isTextOnly ? 1 : 0);
+                        if (delegate != null && getVisibility() == VISIBLE && !isTextOnly) {
                             delegate.onAttachButtonHidden();
                         }
                     }
@@ -7553,7 +7555,9 @@ public class ChatActivityEnterView extends FrameLayout implements
                         runningAnimation2 = null;
                     }
 
-                    if (attachLayout != null) {
+                    // Only hide attachLayout if NOT text-only mode (keep it visible when user types text)
+                    boolean isTextOnly = message.length() > 0 && !forceShowSendButton && audioToSend == null && videoToSendMessageObject == null;
+                    if (attachLayout != null && !isTextOnly) {
                         runningAnimation2 = new AnimatorSet();
                         ArrayList<Animator> animators = new ArrayList<>();
                         animators.add(ObjectAnimator.ofFloat(attachLayout, ATTACH_LAYOUT_ALPHA, 0.0f));
@@ -7595,8 +7599,8 @@ public class ChatActivityEnterView extends FrameLayout implements
                             }
                         });
                         runningAnimation2.start();
-                        updateFieldRight(0);
-                        if (delegate != null && getVisibility() == VISIBLE) {
+                        updateFieldRight(isTextOnly ? 1 : 0);
+                        if (delegate != null && getVisibility() == VISIBLE && !isTextOnly) {
                             delegate.onAttachButtonHidden();
                         }
                     }
@@ -9794,6 +9798,12 @@ public class ChatActivityEnterView extends FrameLayout implements
             return null;
         }
         return messageEditText.getText();
+    }
+
+    public void clearMessageText() {
+        if (messageEditText != null) {
+            messageEditText.setText("");
+        }
     }
 
     public CharSequence getDraftMessage() {
