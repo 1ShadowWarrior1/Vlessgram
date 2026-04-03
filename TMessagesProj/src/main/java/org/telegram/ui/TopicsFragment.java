@@ -834,22 +834,9 @@ public class TopicsFragment extends BaseFragment implements NotificationCenter.N
         Drawable generalIconDrawable = ForumUtilities.createGeneralTopicDrawable(getContext(), .85f, Color.WHITE, false);
         generalIconDrawable.setBounds(0, AndroidUtilities.dp(2), AndroidUtilities.dp(16), AndroidUtilities.dp(18));
         generalIcon.setSpan(new ImageSpan(generalIconDrawable, DynamicDrawableSpan.ALIGN_CENTER), 0, 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        pullForegroundDrawable = new PullForegroundDrawable(
-            AndroidUtilities.replaceCharSequence("#", LocaleController.getString(R.string.AccSwipeForGeneral), generalIcon),
-            AndroidUtilities.replaceCharSequence("#", LocaleController.getString(R.string.AccReleaseForGeneral), generalIcon)
-        ) {
-            @Override
-            protected float getViewOffset() {
-                return recyclerListView.getViewOffset();
-            }
-        };
-        if (false) {
-            pullForegroundDrawable.showHidden();
-        } else {
-            pullForegroundDrawable.doNotShow();
-        }
-        pullViewState = hiddenShown ? ARCHIVE_ITEM_STATE_HIDDEN : ARCHIVE_ITEM_STATE_PINNED;
-        pullForegroundDrawable.setWillDraw(pullViewState != ARCHIVE_ITEM_STATE_PINNED);
+        // Archive pull gesture is completely disabled - archive is only accessible through side menu
+        pullForegroundDrawable = null;
+        pullViewState = ARCHIVE_ITEM_STATE_PINNED;
         DefaultItemAnimator defaultItemAnimator = new DefaultItemAnimator() {
             Runnable finishRunnable;
             int scrollAnimationIndex;
@@ -1079,7 +1066,7 @@ public class TopicsFragment extends BaseFragment implements NotificationCenter.N
                     recyclerListView.setViewsOffset(ty);
                 }
 
-                if (pullViewState != ARCHIVE_ITEM_STATE_PINNED && hiddenCount > 0) {
+                if (false && pullViewState != ARCHIVE_ITEM_STATE_PINNED && hiddenCount > 0) {
                     int usedDy = super.scrollVerticallyBy(measuredDy, recycler, state);
                     if (pullForegroundDrawable != null) {
                         pullForegroundDrawable.scrollDy = usedDy;
@@ -1732,9 +1719,9 @@ public class TopicsFragment extends BaseFragment implements NotificationCenter.N
         }
 
         private void updatePullState() {
-            pullViewState = !hiddenShown ? ARCHIVE_ITEM_STATE_HIDDEN : ARCHIVE_ITEM_STATE_PINNED;
+            pullViewState = ARCHIVE_ITEM_STATE_PINNED;
             if (pullForegroundDrawable != null) {
-                pullForegroundDrawable.setWillDraw(pullViewState != ARCHIVE_ITEM_STATE_PINNED);
+                pullForegroundDrawable.setWillDraw(false);
             }
         }
 
@@ -1761,7 +1748,7 @@ public class TopicsFragment extends BaseFragment implements NotificationCenter.N
                 }
             }
             boolean result = super.onTouchEvent(e);
-            if ((action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) && pullViewState == ARCHIVE_ITEM_STATE_HIDDEN && hiddenCount > 0) {
+            if (false && (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) && pullViewState == ARCHIVE_ITEM_STATE_HIDDEN && hiddenCount > 0) {
                 LinearLayoutManager layoutManager = (LinearLayoutManager) getLayoutManager();
                 int currentPosition = layoutManager.findFirstVisibleItemPosition();
                 if (currentPosition == 0) {

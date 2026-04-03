@@ -702,6 +702,18 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                     args.putLong("user_id", UserConfig.getInstance(currentAccount).getClientUserId());
                     presentFragment(new ChatActivity(args));
                     drawerLayoutContainer.closeDrawer(false);
+                } else if (id == 18) {
+                    // Don't open archive if already in archive
+                    BaseFragment currentFragment = actionBarLayout.getFragmentStack().isEmpty() ? null : actionBarLayout.getFragmentStack().get(actionBarLayout.getFragmentStack().size() - 1);
+                    if (currentFragment instanceof DialogsActivity && ((DialogsActivity) currentFragment).isArchive()) {
+                        drawerLayoutContainer.closeDrawer(false);
+                        return;
+                    }
+                    Bundle args = new Bundle();
+                    args.putInt("folderId", 1);
+                    DialogsActivity dialogsActivity = new DialogsActivity(args);
+                    presentFragment(dialogsActivity);
+                    drawerLayoutContainer.closeDrawer(false);
                 } else if (id == 13) {
                     if (MessagesController.getInstance(currentAccount).isFrozen()) {
                         AccountFrozenAlert.show(currentAccount);

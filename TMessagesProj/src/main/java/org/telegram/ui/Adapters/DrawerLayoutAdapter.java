@@ -65,11 +65,33 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
         return count;
     }
 
+    private boolean archiveItemHidden = false;
+    
+    public void setArchiveItemHidden(boolean hidden) {
+        if (archiveItemHidden == hidden) return;
+        archiveItemHidden = hidden;
+        // Find and update archive item visibility
+        for (int i = 0; i < items.size(); i++) {
+            Item item = items.get(i);
+            if (item != null && item.id == 18) {
+                item.hidden = hidden;
+                break;
+            }
+        }
+        notifyDataSetChanged();
+    }
+    
     @Override
     public int getItemCount() {
         int count = items.size() + 2;
         if (accountsShown) {
             count += getAccountRowsCount();
+        }
+        // Subtract hidden items
+        for (Item item : items) {
+            if (item != null && item.hidden) {
+                count--;
+            }
         }
         return count;
     }
@@ -165,7 +187,16 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
                 if (accountsShown) {
                     position -= getAccountRowsCount();
                 }
-                items.get(position).bind(drawerActionCell);
+                // Skip hidden items
+                int actualPosition = 0;
+                for (int i = 0; i < items.size(); i++) {
+                    if (items.get(i) != null && items.get(i).hidden) continue;
+                    if (actualPosition == position) {
+                        items.get(i).bind(drawerActionCell);
+                        break;
+                    }
+                    actualPosition++;
+                }
                 drawerActionCell.setPadding(0, 0, 0, 0);
                 break;
             }
@@ -203,10 +234,17 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
             }
             i -= getAccountRowsCount();
         }
-        if (i < 0 || i >= items.size() || items.get(i) == null) {
-            return 2;
+        // Skip hidden items
+        int actualPosition = 0;
+        for (int j = 0; j < items.size(); j++) {
+            if (items.get(j) != null && items.get(j).hidden) continue;
+            if (actualPosition == i) {
+                if (items.get(j) == null) return 2;
+                return 3;
+            }
+            actualPosition++;
         }
-        return 3;
+        return 2;
     }
 
     public void swapElements(int fromIndex, int toIndex) {
@@ -339,6 +377,7 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
         items.add(new Item(6, LocaleController.getString(R.string.Contacts), contactsIcon));
         items.add(new Item(10, LocaleController.getString(R.string.Calls), callsIcon));
         items.add(new Item(11, LocaleController.getString(R.string.SavedMessages), savedIcon));
+        items.add(new Item(18, LocaleController.getString(R.string.ArchivedChats), R.drawable.msg_archive));
         items.add(new Item(8, LocaleController.getString(R.string.Settings), settingsIcon));
         items.add(null); // divider
         items.add(new Item(7, LocaleController.getString(R.string.InviteFriends), inviteIcon));
@@ -406,6 +445,7 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
         TLRPC.TL_attachMenuBot bot;
         View.OnClickListener listener;
         public boolean error;
+        public boolean hidden;
 
         public Item(int id, CharSequence text, int icon) {
             this.icon = icon;
@@ -436,6 +476,12 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
         @Keep
         public Item withError() {
             this.error = true;
+            return this;
+        }
+        
+        @Keep
+        public Item withArchiveItem() {
+            // Just a marker for archive item
             return this;
         }
     }

@@ -1363,7 +1363,8 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter implements
 
         protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
             int size = itemInternals.size();
-            boolean hasArchive = folderId == 0 && dialogsType == 0 && MessagesController.getInstance(currentAccount).dialogs_dict.get(DialogObject.makeFolderDialogId(1)) != null;
+            // Archive is hidden from chat list - only accessible through side menu
+            boolean hasArchive = false; // folderId == 0 && dialogsType == 0 && MessagesController.getInstance(currentAccount).dialogs_dict.get(DialogObject.makeFolderDialogId(1)) != null;
             View parent = (View) getParent();
             int height;
             int blurOffset = 0;
@@ -1461,9 +1462,20 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter implements
         updateHasHints();
 
         MessagesController messagesController = MessagesController.getInstance(currentAccount);
-        ArrayList<TLRPC.Dialog> array = parentFragment.getDialogsArray(currentAccount, dialogsType, folderId, dialogsListFrozen);
-        if (array == null) {
-            array = new ArrayList<>();
+        ArrayList<TLRPC.Dialog> sourceArray = parentFragment.getDialogsArray(currentAccount, dialogsType, folderId, dialogsListFrozen);
+        if (sourceArray == null) {
+            sourceArray = new ArrayList<>();
+        }
+        // Filter out archive folder dialog from main chat list AND inside archive
+        long archiveDialogId = DialogObject.makeFolderDialogId(1);
+        ArrayList<TLRPC.Dialog> array = new ArrayList<>();
+        for (int i = 0; i < sourceArray.size(); i++) {
+            TLRPC.Dialog d = sourceArray.get(i);
+            // Always skip archive folder dialog (ID = 0x2000000000000001) to prevent it from appearing in the list
+            if (d.id == archiveDialogId) {
+                continue;
+            }
+            array.add(d);
         }
         dialogsCount = array.size();
         isEmpty = false;

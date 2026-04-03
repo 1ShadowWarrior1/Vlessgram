@@ -54,6 +54,8 @@ import org.telegram.messenger.BuildVars;
 import org.telegram.messenger.FileLog;
 import org.telegram.messenger.R;
 import org.telegram.messenger.Utilities;
+import org.telegram.ui.ActionBar.BaseFragment;
+import org.telegram.ui.Components.RecyclerListView;
 
 public class DrawerLayoutContainer extends FrameLayout {
 
@@ -142,9 +144,14 @@ public class DrawerLayoutContainer extends FrameLayout {
         shadowLeft = getResources().getDrawable(R.drawable.menu_shadow);
     }
 
+    private RecyclerListView sideMenu;
+
     public void setDrawerLayout(FrameLayout layout, View drawerListView) {
         drawerLayout = layout;
         this.drawerListView = drawerListView;
+        if (drawerListView instanceof RecyclerListView) {
+            this.sideMenu = (RecyclerListView) drawerListView;
+        }
         addView(drawerLayout);
         drawerLayout.setVisibility(INVISIBLE);
         drawerListView.setVisibility(GONE);
@@ -203,6 +210,24 @@ public class DrawerLayoutContainer extends FrameLayout {
     public void openDrawer(boolean fast) {
         if (!allowOpenDrawer || drawerLayout == null) {
             return;
+        }
+        // Check if current fragment is archive and hide archive button in side menu
+        if (parentActionBarLayout != null && !parentActionBarLayout.getFragmentStack().isEmpty()) {
+            BaseFragment lastFragment = parentActionBarLayout.getFragmentStack().get(parentActionBarLayout.getFragmentStack().size() - 1);
+            if (lastFragment instanceof org.telegram.ui.DialogsActivity) {
+                org.telegram.ui.DialogsActivity dialogsActivity = (org.telegram.ui.DialogsActivity) lastFragment;
+                if (dialogsActivity.isArchive()) {
+                    // Hide archive button in side menu
+                    if (sideMenu != null && sideMenu.getAdapter() instanceof org.telegram.ui.Adapters.DrawerLayoutAdapter) {
+                        ((org.telegram.ui.Adapters.DrawerLayoutAdapter) sideMenu.getAdapter()).setArchiveItemHidden(true);
+                    }
+                } else {
+                    // Show archive button in side menu
+                    if (sideMenu != null && sideMenu.getAdapter() instanceof org.telegram.ui.Adapters.DrawerLayoutAdapter) {
+                        ((org.telegram.ui.Adapters.DrawerLayoutAdapter) sideMenu.getAdapter()).setArchiveItemHidden(false);
+                    }
+                }
+            }
         }
         if (AndroidUtilities.isTablet() && parentActionBarLayout != null && parentActionBarLayout.getParentActivity() != null) {
             AndroidUtilities.hideKeyboard(parentActionBarLayout.getParentActivity().getCurrentFocus());

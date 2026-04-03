@@ -9238,7 +9238,17 @@ public class MessagesController extends BaseController implements NotificationCe
         if (dialogs == null) {
             return new ArrayList<>();
         }
-        return dialogs;
+        // Filter out archive folder dialog from the list - archive is only accessible through side menu
+        // This applies to both main chat list (folderId=0) and archive (folderId=1)
+        long archiveDialogId = DialogObject.makeFolderDialogId(1);
+        ArrayList<TLRPC.Dialog> filtered = new ArrayList<>();
+        for (int i = 0; i < dialogs.size(); i++) {
+            TLRPC.Dialog d = dialogs.get(i);
+            if (d.id != archiveDialogId) {
+                filtered.add(d);
+            }
+        }
+        return filtered;
     }
 
     public int getAllFoldersDialogsCount() {
@@ -20903,7 +20913,9 @@ public class MessagesController extends BaseController implements NotificationCe
     private void addDialogToItsFolder(int index, TLRPC.Dialog dialog) {
         int folderId;
         if (dialog instanceof TLRPC.TL_dialogFolder) {
-            folderId = 0;
+            // Put folder dialogs into their respective folder, not folder 0
+            TLRPC.TL_dialogFolder folderDialog = (TLRPC.TL_dialogFolder) dialog;
+            folderId = folderDialog.folder.id;
         } else {
             folderId = dialog.folder_id;
         }
